@@ -11,6 +11,7 @@ extern "C"{
 extern uint8_t xtime_lut[256];
 extern uint8_t sbox_lut[256];
 extern uint8_t inv_sbox_lut[256];
+extern uint8_t round_lut[1024];
 
 #if defined(__cplusplus)
 }
