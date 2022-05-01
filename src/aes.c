@@ -115,7 +115,7 @@ static inline void aes256_key_expansion(const void* k, aes256* aes)
             temp = SubWord(RotWord(temp)) ^ (Rcon[i>>3] << 24);
             #endif
         }
-        else if(i & 7 == 4)
+        else if(!(i & 3))
             temp = SubWord(temp);
         ((uint32_t*)aes->w)[i] = ((uint32_t*)aes->w)[i-8] ^ temp;
     }
@@ -152,7 +152,21 @@ aes128 *aes128_init(const void *key){
     aes128_key_expansion((uint8_t*)key, aes);
     return aes;
 }
+aes192 *aes192_init(const void *key){
+    aes192 *aes = malloc(sizeof(*aes));
+    if(!aes) return NULL;
+    aes192_key_expansion((uint8_t*)key, aes);
+    return aes;
+}
+aes256 *aes256_init(const void *key){
+    aes256 *aes = malloc(sizeof(*aes));
+    if(!aes) return NULL;
+    aes256_key_expansion((uint8_t*)key, aes);
+    return aes;
+}
 void aes128_done(aes128 *aes){ free(aes); }
+void aes192_done(aes192 *aes){ free(aes); }
+void aes256_done(aes256 *aes){ free(aes); }
 
 void aes128_encrypt_block(const void *in, void *out, const aes128* aes)
 {
