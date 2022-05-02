@@ -1,35 +1,75 @@
 #include "aes/aes.h"
 #include <stdio.h>
+#include <string.h>
 
+
+#define STYLE_ERROR "\033[1;31m"
+#define STYLE_GOOD "\033[1;32m"
+#define STYLE_DEFAULT "\033[0m"
+
+void printBlock(uint8_t b[16], int n){
+    for (int i = 0; i < n; i++){
+        printf("0x%02x, ", b[i]);
+    }
+    printf("\b\b \n");
+}
+int check(uint8_t *expected, uint8_t *actual){
+    for (int i = 0; i < 16; i++)
+        if(expected[i] != actual[i]) return i;
+    return -1;    
+}
 
 int main(int argc, char const *argv[])
 {
-    uint8_t in[] = {0x32, 0x43, 0xf6, 0xa8, 0x88, 0x5a, 0x30, 0x8d, 0x31, 0x31, 0x98, 0xa2, 0xe0, 0x37, 0x07, 0x34};
-    const uint8_t k[] = {0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c};
+    const uint8_t in[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
     uint8_t out[16] = {0};
-    const uint8_t k2[] = {
-        0x8e, 0x73, 0xb0, 0xf7, 0xda, 0x0e, 0x64, 0x52, 0xc8, 0x10, 0xf3, 0x2b,
-        0x80, 0x90, 0x79, 0xe5, 0x62, 0xf8, 0xea, 0xd2, 0x52, 0x2c, 0x6b, 0x7b,
-    };
-    const uint8_t k3[] = {
-        0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe, 0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77, 0x81,
-        0x1f, 0x35, 0x2c, 0x07, 0x3b, 0x61, 0x08, 0xd7, 0x2d, 0x98, 0x10, 0xa3, 0x09, 0x14, 0xdf, 0xf4,
-    };
+    /* keys */
+    uint8_t k[16];
+    uint8_t k2[24];
+    uint8_t k3[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
+
+    const uint8_t exp1[] = {0x69, 0xc4, 0xe0, 0xd8, 0x6a, 0x7b, 0x04, 0x30, 0xd8, 0xcd, 0xb7, 0x80, 0x70, 0xb4, 0xc5, 0x5a};
+    const uint8_t exp2[] = {0xdd, 0xa9, 0x7c, 0xa4, 0x86, 0x4c, 0xdf, 0xe0, 0x6e, 0xaf, 0x70, 0xa0, 0xec, 0x0d, 0x71, 0x91};
+    const uint8_t exp3[] = {0x8e, 0xa2, 0xb7, 0xca, 0x51, 0x67, 0x45, 0xbf, 0xea, 0xfc, 0x49, 0x90, 0x4b, 0x49, 0x60, 0x89};
+    
+    memcpy(k, k3, 16);
+    memcpy(k2, k3, 24);
+
+    printBlock(k, 16);
+    printBlock(k2, 24);
+    printBlock(k3, 32);
+    printf("================\n");
 
     aes128 *aes = aes128_init(k);
-    aes128_encrypt_block(in, out, aes);
-
-    for (int i = 0; i < 4; i++){
-        for(int j=0; j<4; ++j)
-            printf("%02x ", out[4*j+i]);
-        printf("\n");
-    }
     aes192 *aes2 = aes192_init(k2);
     aes256 *aes3 = aes256_init(k3);
 
+    int r;
+    aes128_encrypt_block(in, out, aes);
+    printBlock(out, 16);
+    if((r = check(exp1, out)) >= 0){
+        printf(STYLE_ERROR "Error with AES 128 at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
+            r, exp1[r], out[r]);
+        return 1;
+    }
+    printf(STYLE_GOOD "AES 128 ok" STYLE_DEFAULT "\n");
+    aes192_encrypt_block(in, out, aes2);
+    printBlock(out, 16);
+    if((r = check(exp2, out)) >= 0){
+        printf(STYLE_ERROR "Error with AES 192 at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
+            r, exp2[r], out[r]);
+        return 1;
+    }
+    printf(STYLE_GOOD "AES 192 ok" STYLE_DEFAULT "\n");
 
-    for(int i=0; i<240; i+=4)
-        printf("%02x%02x%02x%02x\n", ((uint8_t*)aes3)[i],((uint8_t*)aes3)[i+1],((uint8_t*)aes3)[2+i],((uint8_t*)aes3)[3+i]);
+    aes256_encrypt_block(in, out, aes3);
+    printBlock(out, 16);
+    if((r = check(exp3, out)) >= 0){
+        printf(STYLE_ERROR "Error with AES 256 at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
+            r, exp3[r], out[r]);
+        return 1;
+    }
+    printf(STYLE_GOOD "AES 256 ok" STYLE_DEFAULT "\n");
 
     aes128_done(aes);
     aes192_done(aes2);

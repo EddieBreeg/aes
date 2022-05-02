@@ -40,20 +40,10 @@ static inline uint32_t SubWord(uint32_t x){
 
 #if __BYTE_ORDER != __LITTLE_ENDIAN
 
-static inline uint32_t lendian32(uint32_t x){
-    uint8_t b[] = {
-        (uint8_t)x,
-        (uint8_t)(x >> 8),
-        (uint8_t)(x >> 16),
-        (uint8_t)(x >> 24)
-    };
-    return *(uint32_t*)b;
-}
 #define RotWord(x, k)   (((x) << (k)) | ((x) >> (32 - (k))))
 
 #else
 
-static inline uint32_t lendian32(uint32_t x){ return x; }
 #define RotWord(x, k)   (((x) >> (k)) | ((x) << (32 - (k))))
 
 #endif
@@ -168,14 +158,24 @@ void aes128_done(aes128 *aes){ free(aes); }
 void aes192_done(aes192 *aes){ free(aes); }
 void aes256_done(aes256 *aes){ free(aes); }
 
+#define encrypt_block(in, out, aes, nRounds){ \
+    uint8_t *state = (uint8_t*)out; \
+    for(int i=0; i<16; ++i) \
+        state[i] = ((uint8_t*)in)[i] ^ aes->w[i];\
+    for(int i=1; i<(nRounds); ++i)\
+        aes_full_round(state, aes->w + (i<<4));\
+    aes_last_round(state, aes->w + (nRounds<<4));\
+}
+
 void aes128_encrypt_block(const void *in, void *out, const aes128* aes)
 {
-    uint8_t *state = (uint8_t*)out;
-    // copy the input to the output
-    for(int i=0; i<16; ++i) 
-        state[i] = ((uint8_t*)in)[i] ^ aes->w[i];
-
-    for(int i=1; i<10; ++i)
-        aes_full_round(state, aes->w + (i<<4));
-    aes_last_round(state, aes->w + 160);
+    encrypt_block(in, out, aes, 10);
+}
+void aes192_encrypt_block(const void *in, void *out, const aes192* aes)
+{
+    encrypt_block(in, out, aes, 12);
+}
+void aes256_encrypt_block(const void *in, void *out, const aes256* aes)
+{
+    encrypt_block(in, out, aes, 14);
 }
