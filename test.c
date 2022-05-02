@@ -1,7 +1,7 @@
 #include "aes/aes.h"
 #include <stdio.h>
 #include <string.h>
-
+#include <stdint.h>
 
 #define STYLE_ERROR "\033[1;31m"
 #define STYLE_GOOD "\033[1;32m"
@@ -13,7 +13,7 @@ void printBlock(uint8_t b[16], int n){
     }
     printf("\b\b \n");
 }
-int check(uint8_t *expected, uint8_t *actual){
+int check(const uint8_t *expected, const uint8_t *actual){
     for (int i = 0; i < 16; i++)
         if(expected[i] != actual[i]) return i;
     return -1;    

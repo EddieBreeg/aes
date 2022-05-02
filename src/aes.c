@@ -1,5 +1,5 @@
 #include "aes/aes.h"
-#include "aes/mult.h"
+#include "aes/luts.h"
 #include "aes/endian.h"
 #include <string.h>
 #include <stdlib.h>

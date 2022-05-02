@@ -1,5 +1,6 @@
-#include "aes/mult.h"
 #include "aes/endian.h"
+#include "aes/luts.h"
+#include <stdint.h>
 #include <stdio.h>
 
 #if __BYTE_ORDER != __LITTLE_ENDIAN
@@ -23,6 +24,18 @@ uint32_t mix(uint8_t x){
         xtime_lut[x] ^ x,
     };
     return *(uint32_t*)b;
+}
+static inline uint8_t mult8(uint8_t a, uint8_t b){
+    uint8_t inter = a;
+    uint8_t res = (b&1) * a;
+    b >>= 1;
+    for (int i = 0; i < 7; i++)
+    {
+        inter = xtime_lut[inter];
+        res ^= (b & 1) * inter;
+        b >>= 1;
+    }
+    return res;
 }
 
 int main(int argc, char const *argv[])

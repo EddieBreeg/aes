@@ -5,7 +5,6 @@
 extern "C"{
 #endif
 
-#include "mult.h"
 
 typedef struct aes128 aes128;
 typedef struct aes192 aes192;

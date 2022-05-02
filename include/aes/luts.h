@@ -8,7 +8,7 @@ extern "C"{
 
 #include <stdint.h>
 
-extern uint8_t xtime_lut[256];
+extern uint8_t xtime_lut[256]; /* soon to be removed */
 extern uint8_t sbox_lut[256];
 extern uint8_t inv_sbox_lut[256];
 extern uint8_t round_lut[1024];
