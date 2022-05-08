@@ -1,9 +1,7 @@
 #ifndef AES_H
 #define AES_H
 
-#ifdef __cplusplus
-extern "C"{
-#endif
+#ifndef __cplusplus
 
 #include <stdlib.h>
 
@@ -25,8 +23,32 @@ void aes256_decrypt_block(const void* in, void *out, const aes256* aes);
 
 #define aes_done(aes)   free(aes)
 
-#ifdef __cplusplus
-}
+#else
+
+#include <inttypes.h>
+
+class aes128{
+    uint8_t _w[176];
+public:
+    aes128(const void *key);
+    void encrypt_block(const void *in, void *out) const;
+    void decrypt_block(const void *in, void *out) const;
+};
+class aes192{
+    uint8_t _w[208];
+public:
+    aes192(const void *key);
+    void encrypt_block(const void *in, void *out) const;
+    void decrypt_block(const void *in, void *out) const;
+};
+class aes256{
+    uint8_t _w[240];
+public:
+    aes256(const void *key);
+    void encrypt_block(const void *in, void *out) const;
+    void decrypt_block(const void *in, void *out) const;
+};
+
 #endif
 
 #endif
