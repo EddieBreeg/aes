@@ -135,8 +135,8 @@ static inline void full_round(uint8_t *s, const uint8_t *k){
         inverse_full_round(state, w + (i<<4))    \
     inv_last_round(state, w)   \
 }
-
-aes128::aes128(const void* key){
+void aes128::set_key(const void *key)
+{
     memcpy(_w, key, 16);
     const uint8_t Rcon[] = {0,1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36};
     for (int i = 4; i < (AES128_SCHED_SIZE>>2); i++)
@@ -152,7 +152,7 @@ aes128::aes128(const void* key){
         ((uint32_t*)_w)[i] = ((uint32_t*)_w)[i-4] ^ temp;
     }
 }
-aes192::aes192(const void* key){
+void aes192::set_key(const void *key){
     const uint8_t Rcon[] = {0,1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
     memcpy(_w, key, 24);
     for (int i = 6; i < (AES192_SCHED_SIZE>>2); i++)
@@ -167,9 +167,8 @@ aes192::aes192(const void* key){
         }
         ((uint32_t*)_w)[i] = ((uint32_t*)_w)[i-6] ^ temp;
     }
-
 }
-aes256::aes256(const void *k){
+void aes256::set_key(const void *k){
     const uint8_t Rcon[] = {0,1, 2, 4, 8, 0x10, 0x20, 0x40};
     memcpy(_w, k, 32);
     for (int i = 8; i < (AES256_SCHED_SIZE>>2); i++)
@@ -186,6 +185,15 @@ aes256::aes256(const void *k){
             temp = SubWord(temp);
         ((uint32_t*)_w)[i] = ((uint32_t*)_w)[i-8] ^ temp;
     }
+}
+aes128::aes128(const void* key){
+    set_key(key);
+}
+aes192::aes192(const void* key){
+    set_key(key);
+}
+aes256::aes256(const void *k){
+    set_key(k);
 }
 
 void aes128::encrypt_block(const void *in, void *out) const {

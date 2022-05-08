@@ -180,6 +180,19 @@ aes256 *aes256_init(const void *key){
     return aes;
 }
 
+void aes128_set_key(aes128* aes, const void *key)
+{
+    aes128_key_expansion(key, aes);
+}
+void aes192_set_key(aes192* aes, const void *key)
+{
+    aes192_key_expansion(key, aes);
+}
+void aes256_set_key(aes256* aes, const void *key)
+{
+    aes256_key_expansion(key, aes);
+}
+
 #define encrypt_block(in, out, aes, nRounds){ \
     uint8_t *state = (uint8_t*)out; \
     for(int i=0; i<16; ++i) \

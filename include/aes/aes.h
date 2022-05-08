@@ -39,6 +39,10 @@ aes128 *aes128_init(const void *key);
 aes192 *aes192_init(const void *key);
 aes256 *aes256_init(const void *key);
 
+void aes128_set_key(aes128* aes, const void *key);
+void aes192_set_key(aes192* aes, const void *key);
+void aes256_set_key(aes256* aes, const void *key);
+
 void aes128_encrypt_block(const void *in, void *out, const aes128* aes);
 void aes192_encrypt_block(const void *in, void *out, const aes192* aes);
 void aes256_encrypt_block(const void *in, void *out, const aes256* aes);
@@ -57,22 +61,28 @@ class aes128{
     uint8_t _w[176];
 public:
     aes128(const void *key);
+    aes128(const aes128& other) = delete;
     void encrypt_block(const void *in, void *out) const;
     void decrypt_block(const void *in, void *out) const;
+    void set_key(const void *key);
 };
 class aes192{
     uint8_t _w[208];
 public:
     aes192(const void *key);
+    aes192(const aes192& other) = delete;
     void encrypt_block(const void *in, void *out) const;
     void decrypt_block(const void *in, void *out) const;
+    void set_key(const void *key);
 };
 class aes256{
     uint8_t _w[240];
 public:
     aes256(const void *key);
+    aes256(const aes256& other) = delete;
     void encrypt_block(const void *in, void *out) const;
     void decrypt_block(const void *in, void *out) const;
+    void set_key(const void *key);
 };
 
 #endif
