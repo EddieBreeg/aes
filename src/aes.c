@@ -2,8 +2,6 @@
 #include "aes/luts.h"
 #include "aes/endian.h"
 #include <string.h>
-#include <stdlib.h>
-
 
 #define AES128_SCHED_SIZE   176
 #define AES192_SCHED_SIZE   208
@@ -20,16 +18,9 @@ typedef struct aes256{
 } aes256;
 
 
-
-
-
 #define SubBytes(s, n){\
     for (int i = 0; i < (n); i++)     \
-        (s)[i] = sbox_lut[(s)[i]];      \
-}
-#define InvSubBytes(s, n){\
-    for (int i = 0; i < (n); i++)     \
-        (s)[i] = inv_sbox_lut[(s)[i]];  \
+        (s)[i] = sbox[(s)[i]];      \
 }
 
 static inline uint32_t SubWord(uint32_t x){
@@ -48,14 +39,6 @@ static inline uint32_t SubWord(uint32_t x){
 
 #endif
 
-
-#define aes_mix_column(c){\
-    uint8_t x = xtime_lut[(c)[0]] ^ (c)[1] ^ xtime_lut[(c)[1]] ^ (c)[2] ^ (c)[3];   \
-    uint8_t y = xtime_lut[(c)[1]] ^ (c)[2] ^ xtime_lut[(c)[2]] ^ (c)[3] ^ (c)[0];   \
-    uint8_t z = xtime_lut[(c)[2]] ^ (c)[3] ^ xtime_lut[(c)[3]] ^ (c)[0] ^ (c)[1];   \
-    (c)[3] = xtime_lut[(c)[3]] ^ (c)[0] ^ xtime_lut[(c)[0]] ^ (c)[1] ^ (c)[2];   \
-    (c)[0] = x; (c)[1] = y; (c)[2] = z; \
-}
 
 static inline void aes128_key_expansion(const void* k, aes128* aes)
 {
@@ -110,31 +93,73 @@ static inline void aes256_key_expansion(const void* k, aes256* aes)
         ((uint32_t*)aes->w)[i] = ((uint32_t*)aes->w)[i-8] ^ temp;
     }
 }
-static inline void aes_full_round(uint8_t *s, const uint8_t *k){
+
+#define mix_column(a, b, c, d, T) ((T)[(a)] ^ RotWord((T)[(b)], 24) ^ RotWord((T)[(c)], 16) ^ RotWord((T)[(d)], 8))
+
+static inline void full_round(uint8_t *s, const uint8_t *k){
     uint32_t *T = (uint32_t*)round_lut;
 
-    uint32_t c0 = ((uint32_t*)k)[0] ^ T[s[0]] ^ RotWord(T[s[5]], 24) ^ RotWord(T[s[10]], 16) ^ RotWord(T[s[15]], 8);
-    uint32_t c1 = ((uint32_t*)k)[1] ^ T[s[4]] ^ RotWord(T[s[9]], 24) ^ RotWord(T[s[14]], 16) ^ RotWord(T[s[3]], 8);
-    uint32_t c2 = ((uint32_t*)k)[2] ^ T[s[8]] ^ RotWord(T[s[13]], 24) ^ RotWord(T[s[2]], 16) ^ RotWord(T[s[7]], 8);
-    uint32_t c3 = ((uint32_t*)k)[3] ^ T[s[12]] ^ RotWord(T[s[1]], 24) ^ RotWord(T[s[6]], 16) ^ RotWord(T[s[11]], 8);
+    uint32_t c0 = ((uint32_t*)k)[0] ^ mix_column(s[0], s[5], s[10], s[15], T);
+    uint32_t c1 = ((uint32_t*)k)[1] ^ mix_column(s[4], s[9], s[14], s[3], T);
+    uint32_t c2 = ((uint32_t*)k)[2] ^ mix_column(s[8], s[13], s[2], s[7], T);
+    uint32_t c3 = ((uint32_t*)k)[3] ^ mix_column(s[12], s[1], s[6], s[11], T);
 
     ((uint32_t*)s)[0] = c0;
     ((uint32_t*)s)[1] = c1;
     ((uint32_t*)s)[2] = c2;
     ((uint32_t*)s)[3] = c3;
 }
-#define aes_last_round(state, k){   \
+#define last_round(state, k){   \
     uint8_t tmp[] = {   \
-        sbox_lut[state[0]], sbox_lut[state[5]], sbox_lut[state[10]], sbox_lut[state[15]],   \
-        sbox_lut[state[4]], sbox_lut[state[9]], sbox_lut[state[14]], sbox_lut[state[3]],    \
-        sbox_lut[state[8]], sbox_lut[state[13]], sbox_lut[state[2]], sbox_lut[state[7]],    \
-        sbox_lut[state[12]], sbox_lut[state[1]], sbox_lut[state[6]], sbox_lut[state[11]],   \
+        sbox[state[0]], sbox[state[5]], sbox[state[10]], sbox[state[15]],   \
+        sbox[state[4]], sbox[state[9]], sbox[state[14]], sbox[state[3]],    \
+        sbox[state[8]], sbox[state[13]], sbox[state[2]], sbox[state[7]],    \
+        sbox[state[12]], sbox[state[1]], sbox[state[6]], sbox[state[11]],   \
     };  \
     *(uint32_t*)(state) = *(uint32_t*)(k)  ^ *(uint32_t*)(tmp); \
     *(uint32_t*)(state+4) = *(uint32_t*)(k+4) ^ *(uint32_t*)(tmp+4); \
     *(uint32_t*)(state+8) = *(uint32_t*)(k+8) ^ *(uint32_t*)(tmp+8); \
     *(uint32_t*)(state+12) = *(uint32_t*)(k+12) ^ *(uint32_t*)(tmp+12);   \
 }
+#define inverse_full_round(s, k){\
+    uint32_t c0 = mix_column(   \
+        (k)[0] ^ inv_sbox[(s)[0]],  \
+        (k)[1] ^ inv_sbox[(s)[13]],     \
+        (k)[2] ^  inv_sbox[(s)[10]],    \
+        (k)[3] ^  inv_sbox[(s)[7]], (uint32_t*)inv_round_lut);   \
+    uint32_t c1 = mix_column(   \
+        (k)[4] ^ inv_sbox[(s)[4]],  \
+        (k)[5] ^ inv_sbox[(s)[1]],  \
+        (k)[6] ^  inv_sbox[(s)[14]],    \
+        (k)[7] ^  inv_sbox[(s)[11]], (uint32_t*)inv_round_lut);  \
+    uint32_t c2 = mix_column(   \
+        (k)[8] ^ inv_sbox[(s)[8]],  \
+        (k)[9] ^ inv_sbox[(s)[5]],  \
+        (k)[10] ^  inv_sbox[(s)[2]],    \
+        (k)[11] ^  inv_sbox[(s)[15]], (uint32_t*)inv_round_lut); \
+    uint32_t c3 = mix_column(   \
+        (k)[12] ^ inv_sbox[(s)[12]],    \
+        (k)[13] ^ inv_sbox[(s)[9]],     \
+        (k)[14] ^  inv_sbox[(s)[6]],    \
+        (k)[15] ^  inv_sbox[(s)[3]], (uint32_t*)inv_round_lut);  \
+    ((uint32_t*)(s))[0] = c0; \
+    ((uint32_t*)(s))[1] = c1; \
+    ((uint32_t*)(s))[2] = c2; \
+    ((uint32_t*)(s))[3] = c3; \
+}
+#define inv_last_round(state, k){   \
+    uint8_t tmp[] = {   \
+        inv_sbox[state[0]], inv_sbox[state[13]], inv_sbox[state[10]], inv_sbox[state[7]],   \
+        inv_sbox[state[4]], inv_sbox[state[1]], inv_sbox[state[14]], inv_sbox[state[11]],    \
+        inv_sbox[state[8]], inv_sbox[state[5]], inv_sbox[state[2]], inv_sbox[state[15]],    \
+        inv_sbox[state[12]], inv_sbox[state[9]], inv_sbox[state[6]], inv_sbox[state[3]],   \
+    };  \
+    *(uint32_t*)(state) = *(uint32_t*)(k)  ^ *(uint32_t*)(tmp); \
+    *(uint32_t*)(state+4) = *(uint32_t*)(k+4) ^ *(uint32_t*)(tmp+4); \
+    *(uint32_t*)(state+8) = *(uint32_t*)(k+8) ^ *(uint32_t*)(tmp+8); \
+    *(uint32_t*)(state+12) = *(uint32_t*)(k+12) ^ *(uint32_t*)(tmp+12);   \
+}
+
 
 aes128 *aes128_init(const void *key){
     aes128 *aes = malloc(sizeof(*aes));
@@ -154,17 +179,22 @@ aes256 *aes256_init(const void *key){
     aes256_key_expansion((uint8_t*)key, aes);
     return aes;
 }
-void aes128_done(aes128 *aes){ free(aes); }
-void aes192_done(aes192 *aes){ free(aes); }
-void aes256_done(aes256 *aes){ free(aes); }
 
 #define encrypt_block(in, out, aes, nRounds){ \
     uint8_t *state = (uint8_t*)out; \
     for(int i=0; i<16; ++i) \
         state[i] = ((uint8_t*)in)[i] ^ aes->w[i];\
     for(int i=1; i<(nRounds); ++i)\
-        aes_full_round(state, aes->w + (i<<4));\
-    aes_last_round(state, aes->w + (nRounds<<4));\
+        full_round(state, aes->w + (i<<4));\
+    last_round(state, aes->w + (nRounds<<4));\
+}
+#define decrypt_block(in, out, aes, nRounds){\
+    uint8_t *state = (uint8_t*)out; \
+    for(int i=0; i<16; ++i) \
+        state[i] = ((uint8_t*)in)[i] ^ aes->w[(nRounds<<4) + i];    \
+    for(int i=nRounds-1; i>0; --i)  \
+        inverse_full_round(state, aes->w + (i<<4))    \
+    inv_last_round(state, aes->w)   \
 }
 
 void aes128_encrypt_block(const void *in, void *out, const aes128* aes)
@@ -178,4 +208,16 @@ void aes192_encrypt_block(const void *in, void *out, const aes192* aes)
 void aes256_encrypt_block(const void *in, void *out, const aes256* aes)
 {
     encrypt_block(in, out, aes, 14);
+}
+void aes128_decrypt_block(const void* in, void *out, const aes128* aes)
+{
+    decrypt_block(in, out, aes, 10);
+}
+void aes192_decrypt_block(const void* in, void *out, const aes192* aes)
+{
+    decrypt_block(in, out, aes, 12);
+}
+void aes256_decrypt_block(const void* in, void *out, const aes256* aes)
+{
+    decrypt_block(in, out, aes, 14);
 }

@@ -23,6 +23,7 @@ int main(int argc, char const *argv[])
 {
     const uint8_t in[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
     uint8_t out[16] = {0};
+    uint8_t out2[16] = {0};
     /* keys */
     uint8_t k[16];
     uint8_t k2[24];
@@ -45,19 +46,35 @@ int main(int argc, char const *argv[])
     aes256 *aes3 = aes256_init(k3);
 
     int r;
+
     aes128_encrypt_block(in, out, aes);
     printBlock(out, 16);
     if((r = check(exp1, out)) >= 0){
-        printf(STYLE_ERROR "Error with AES 128 at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
+        printf(STYLE_ERROR "Error with AES 128 encrypt at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
             r, exp1[r], out[r]);
         return 1;
     }
+    aes128_decrypt_block(out, out2, aes);
+    printBlock(out2, 16);
+    if((r = check(in, out2)) >= 0){
+        printf(STYLE_ERROR "Error with AES 128 decrypt at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
+            r, in[r], out2[r]);
+        return 1;
+    }
     printf(STYLE_GOOD "AES 128 ok" STYLE_DEFAULT "\n");
+
     aes192_encrypt_block(in, out, aes2);
     printBlock(out, 16);
     if((r = check(exp2, out)) >= 0){
-        printf(STYLE_ERROR "Error with AES 192 at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
+        printf(STYLE_ERROR "Error with AES 192 encrypt at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
             r, exp2[r], out[r]);
+        return 1;
+    }
+    aes192_decrypt_block(out, out2, aes2);
+    printBlock(out2, 16);
+    if((r = check(in, out2)) >= 0){
+        printf(STYLE_ERROR "Error with AES 192 decrypt at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
+            r, in[r], out2[r]);
         return 1;
     }
     printf(STYLE_GOOD "AES 192 ok" STYLE_DEFAULT "\n");
@@ -65,14 +82,21 @@ int main(int argc, char const *argv[])
     aes256_encrypt_block(in, out, aes3);
     printBlock(out, 16);
     if((r = check(exp3, out)) >= 0){
-        printf(STYLE_ERROR "Error with AES 256 at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
+        printf(STYLE_ERROR "Error with AES 256 encrypt at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
             r, exp3[r], out[r]);
+        return 1;
+    }
+    aes256_decrypt_block(out, out2, aes3);
+    printBlock(out2, 16);
+    if((r = check(in, out2)) >= 0){
+        printf(STYLE_ERROR "Error with AES 256 decrypt at index %i: expected %02x, got %02x" STYLE_DEFAULT "\n", 
+            r, in[r], out2[r]);
         return 1;
     }
     printf(STYLE_GOOD "AES 256 ok" STYLE_DEFAULT "\n");
 
-    aes128_done(aes);
-    aes192_done(aes2);
-    aes256_done(aes3);
+    aes_done(aes);
+    aes_done(aes2);
+    aes_done(aes3);
     return 0;
 }

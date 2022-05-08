@@ -5,6 +5,7 @@
 extern "C"{
 #endif
 
+#include <stdlib.h>
 
 typedef struct aes128 aes128;
 typedef struct aes192 aes192;
@@ -18,10 +19,11 @@ void aes128_encrypt_block(const void *in, void *out, const aes128* aes);
 void aes192_encrypt_block(const void *in, void *out, const aes192* aes);
 void aes256_encrypt_block(const void *in, void *out, const aes256* aes);
 
+void aes128_decrypt_block(const void* in, void *out, const aes128* aes);
+void aes192_decrypt_block(const void* in, void *out, const aes192* aes);
+void aes256_decrypt_block(const void* in, void *out, const aes256* aes);
 
-void aes128_done(aes128 *aes);
-void aes192_done(aes192 *aes);
-void aes256_done(aes256 *aes);
+#define aes_done(aes)   free(aes)
 
 #ifdef __cplusplus
 }
