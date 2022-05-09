@@ -53,7 +53,7 @@ https://github.com/mikepb/endian.h/blob/master/endian.h)
 
 #	include <sys/endian.h>
 
-#elif defined(__WINDOWS__)
+#elif defined(__WINDOWS__) && !defined(_MSC_VER)
 
 #	include <sys/param.h>
 
@@ -61,9 +61,19 @@ https://github.com/mikepb/endian.h/blob/master/endian.h)
 #	define __BIG_ENDIAN    BIG_ENDIAN
 #	define __LITTLE_ENDIAN LITTLE_ENDIAN
 #	define __PDP_ENDIAN    PDP_ENDIAN
+#elif defined(__WINDOWS__) &&\
+    (defined(_M_IX86) || defined(_M_X64))
+
+#define     __LITTLE_ENDIAN 0
+#define     __BIG_ENDIAN    1
+#define     __BYTE_ORDER    __LITTLE_ENDIAN
 
 #else
-#	error platform not supported
+#	error native endianness couldn't be determined
+#endif
+
+#if defined(__PDP_ENDIAN) && defined(__BYTE_ORDER) && __BYTE_ORDER == __PDP_ENDIAN
+#error  PDP endianness isn't supported
 #endif
 
 #ifdef __cplusplus
