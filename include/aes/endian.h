@@ -30,7 +30,7 @@ For more information, please refer to <http://unlicense.org/>
 /* Macro definitions (based on original code by Mathias Panzenböck which you can find here:
 https://github.com/mikepb/endian.h/blob/master/endian.h) 
 */
-#if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
+#if (defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
 
 #	define __WINDOWS__
 
@@ -66,14 +66,15 @@ https://github.com/mikepb/endian.h/blob/master/endian.h)
 
 #define     __LITTLE_ENDIAN 0
 #define     __BIG_ENDIAN    1
+#define     __PDP_ENDIAN    3
 #define     __BYTE_ORDER    __LITTLE_ENDIAN
 
 #else
-#	error native endianness couldn't be determined
+#	error native endianness couldn't be determined'
 #endif
 
-#if defined(__PDP_ENDIAN) && defined(__BYTE_ORDER) && __BYTE_ORDER == __PDP_ENDIAN
-#error  PDP endianness isn't supported
+#if   (__BYTE_ORDER != __LITTLE_ENDIAN) && ((__BYTE_ORDER != __BIG_ENDIAN)) && (__PDP_ENDIAN == __BYTE_ORDER)
+#   error PDP endian not supported'
 #endif
 
 #ifdef __cplusplus
