@@ -61,6 +61,7 @@ class aes128{
     uint8_t _w[176];
 public:
     aes128(const void *key);
+    aes128() {}
     aes128(const aes128& other) = delete;
     void encrypt_block(const void *in, void *out) const;
     void decrypt_block(const void *in, void *out) const;
@@ -70,6 +71,7 @@ class aes192{
     uint8_t _w[208];
 public:
     aes192(const void *key);
+    aes192() {}
     aes192(const aes192& other) = delete;
     void encrypt_block(const void *in, void *out) const;
     void decrypt_block(const void *in, void *out) const;
@@ -79,6 +81,7 @@ class aes256{
     uint8_t _w[240];
 public:
     aes256(const void *key);
+    aes256() {}
     aes256(const aes256& other) = delete;
     void encrypt_block(const void *in, void *out) const;
     void decrypt_block(const void *in, void *out) const;
