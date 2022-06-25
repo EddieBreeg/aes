@@ -30,7 +30,7 @@ For more information, please refer to <http://unlicense.org/>
 /* Macro definitions (based on original code by Mathias Panzenböck which you can find here:
 https://github.com/mikepb/endian.h/blob/master/endian.h) 
 */
-#if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
+#if (defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
 
 #	define __WINDOWS__
 
@@ -53,7 +53,7 @@ https://github.com/mikepb/endian.h/blob/master/endian.h)
 
 #	include <sys/endian.h>
 
-#elif defined(__WINDOWS__)
+#elif defined(__WINDOWS__) && !defined(_MSC_VER)
 
 #	include <sys/param.h>
 
@@ -61,9 +61,20 @@ https://github.com/mikepb/endian.h/blob/master/endian.h)
 #	define __BIG_ENDIAN    BIG_ENDIAN
 #	define __LITTLE_ENDIAN LITTLE_ENDIAN
 #	define __PDP_ENDIAN    PDP_ENDIAN
+#elif defined(__WINDOWS__) &&\
+    (defined(_M_IX86) || defined(_M_X64))
+
+#define     __LITTLE_ENDIAN 0
+#define     __BIG_ENDIAN    1
+#define     __PDP_ENDIAN    3
+#define     __BYTE_ORDER    __LITTLE_ENDIAN
 
 #else
-#	error platform not supported
+#	error native endianness couldn't be determined'
+#endif
+
+#if   (__BYTE_ORDER != __LITTLE_ENDIAN) && ((__BYTE_ORDER != __BIG_ENDIAN)) && (__PDP_ENDIAN == __BYTE_ORDER)
+#   error PDP endian not supported'
 #endif
 
 #ifdef __cplusplus
