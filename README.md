@@ -3,7 +3,8 @@
 Couldn't more straightforward: this is a C/C++ implementation of the Advanced Encryption Standard,
 as defined in the [FIPS 197](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf).
 
-Optimizations have been made, as suggested in the original [AES Proposal: Rijndael article](http://www.cryptosoft.de/docs/Rijndael.pdf).
+Optimizations have been made, as suggested in the original [AES Proposal: Rijndael article](http://www.cryptosoft.de/docs/Rijndael.pdf). Note, however,
+that this implementation (currently) doesn't make use of the AES instruction sets available on various CPUs.
 
 ## C Interface
 
